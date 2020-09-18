@@ -63,6 +63,11 @@
       <el-table-column label="分类ID" align="center" prop="id" />
       <el-table-column label="名称" align="center" prop="name" />
       <el-table-column label="描述" align="center" prop="description" />
+      <el-table-column label="状态" align="center" prop="status" >
+        <template slot-scope="scope">
+          <el-switch @change="updateStatus(scope.row,$event)" :value="!!scope.row.status"/>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
@@ -82,7 +87,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -261,7 +266,18 @@ export default {
         }).then(response => {
           this.download(response.msg);
         }).catch(function() {});
+    },
+    updateStatus(row,status) {
+      const form = { ...row, status: Number(status) } ;
+      updateCategory(form).then(response => {
+        if (response.code === 200) {
+          this.msgSuccess("状态更新成功");
+          this.getList();
+        }
+      });
+
     }
+
   }
 };
 </script>
