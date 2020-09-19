@@ -51,3 +51,10 @@ export function exportCommodity(query) {
     params: query
   })
 }
+
+export  function getCategories() {
+  return request({
+    url: '/commodity/category/available',
+    method: 'get',
+  })
+}

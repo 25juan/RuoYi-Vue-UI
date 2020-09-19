@@ -12,9 +12,15 @@
       </el-form-item>
       <el-form-item label="所属分类" prop="cateId">
         <el-select v-model="queryParams.cateId" placeholder="请选择所属分类" clearable size="small">
-          <el-option label="请选择字典生成" value="" />
+          <el-option v-for="dict in categories" :key="dict.id" :label="dict.name" :value="dict.id" />
         </el-select>
       </el-form-item>
+      <el-form-item label="状态" prop="status">
+        <el-select v-model="queryParams.status" placeholder="用户状态" clearable size="small" style="width: 240px">
+          <el-option v-for="dict in statusOptions" :key="dict.dictValue" :label="dict.dictLabel" :value="dict.dictValue" />
+        </el-select>
+      </el-form-item>
+
       <el-form-item>
         <el-button type="cyan" icon="el-icon-search" size="small" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="small" @click="resetQuery">重置</el-button>
@@ -66,11 +72,19 @@
     <el-table v-loading="loading" :data="commodityList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="商品id" align="center" prop="id" />
-      <el-table-column label="名称" align="center" prop="name" />
-      <el-table-column label="描述" align="center" prop="description" />
-      <el-table-column label="价格" align="center" prop="price" />
+      <el-table-column show-overflow-tooltip label="名称" align="center" prop="name" />
+      <el-table-column show-overflow-tooltip label="描述" align="center" prop="description" />
+      <el-table-column label="价格" align="center" prop="price" >
+        <template slot-scope="scope">
+          <span>¥{{ scope.row.price }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="剩余件数" align="center" prop="restCount" />
-      <el-table-column label="图片" align="center" prop="picture" />
+      <el-table-column label="图片" align="center" prop="picture" >
+        <template slot-scope="scope">
+          <el-avatar size="large" :src="scope.row.picture"></el-avatar>
+        </template>
+      </el-table-column>
       <el-table-column label="分类" align="center" prop="cateId" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
@@ -91,7 +105,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -133,7 +147,7 @@
 </template>
 
 <script>
-import { listCommodity, getCommodity, delCommodity, addCommodity, updateCommodity, exportCommodity } from "@/api/commodity/commodity";
+import { listCommodity, getCommodity,getCategories, delCommodity, addCommodity, updateCommodity, exportCommodity } from "@/api/commodity/commodity";
 import Editor from '@/components/Editor';
 
 export default {
@@ -157,6 +171,10 @@ export default {
       commodityList: [],
       // 弹出层标题
       title: "",
+      // 状态查询
+      statusOptions:[],
+      categories:[],
+
       // 是否显示弹出层
       open: false,
       // 查询参数
@@ -164,7 +182,8 @@ export default {
         pageNum: 1,
         pageSize: 10,
         name: null,
-        cateId: null
+        cateId: null,
+        status: null
       },
       // 表单参数
       form: {},
@@ -175,6 +194,13 @@ export default {
   },
   created() {
     this.getList();
+    this.getDicts("commodity_status").then((response) => {
+      this.statusOptions = response.data;
+    });
+    getCategories().then(response => {
+      const rows = response.rows || [];
+      this.categories = rows ;
+    })
   },
   methods: {
     /** 查询商品列表 */

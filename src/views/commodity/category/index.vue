@@ -10,13 +10,11 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-
       <el-form-item label="状态" prop="status">
         <el-select v-model="queryParams.status" placeholder="用户状态" clearable size="small" style="width: 240px">
           <el-option v-for="dict in statusOptions" :key="dict.dictValue" :label="dict.dictLabel" :value="dict.dictValue" />
         </el-select>
       </el-form-item>
-
       <el-form-item>
         <el-button type="cyan" icon="el-icon-search" size="small" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="small" @click="resetQuery">重置</el-button>
@@ -171,7 +169,6 @@ export default {
     this.getList();
     this.getDicts("commodity_status").then((response) => {
       this.statusOptions = response.data;
-      console.log(this.statusOptions)
     });
   },
   methods: {
