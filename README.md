@@ -1,30 +1,17 @@
-## 开发
+## 基于若依开发react-native(android)热更新包管理平台（前端）
 
-```bash
-# 克隆项目
-git clone https://gitee.com/y_project/RuoYi-Vue
+1. 初始化sql文件加下面的sql 文件
 
-# 进入项目目录
-cd ruoyi-ui
+1. 修改数据库连接地址`src/main/resources/application-druid.yml`
 
-# 安装依赖
-npm install
+3. 启动应用即可 
 
-# 建议不要直接使用 cnpm 安装依赖，会有各种诡异的 bug。可以通过如下操作解决 npm 下载速度慢的问题
-npm install --registry=https://registry.npm.taobao.org
 
-# 启动服务
-npm run dev
-```
+## 应用截图
+![](./assets/1.png)
 
-浏览器访问 http://localhost:80
+![](./assets/2.png)
 
-## 发布
+![](./assets/3.png)
 
-```bash
-# 构建测试环境
-npm run build:stage
-
-# 构建生产环境
-npm run build:prod
-```
+![](./assets/4.png)

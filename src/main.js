@@ -2,6 +2,7 @@ import Vue from 'vue'
 
 import Cookies from 'js-cookie'
 
+
 import 'normalize.css/normalize.css' // a modern alternative to CSS resets
 
 import Element from 'element-ui'
@@ -22,6 +23,10 @@ import { parseTime, resetForm, addDateRange, selectDictLabel, selectDictLabels, 
 import Pagination from "@/components/Pagination";
 //自定义表格工具扩展
 import RightToolbar from "@/components/RightToolbar"
+import JsonViewer from 'vue-json-viewer'
+
+// Import JsonViewer as a Vue.js plugin
+Vue.use(JsonViewer)
 
 // 全局方法挂载
 Vue.prototype.getDicts = getDicts
@@ -33,6 +38,7 @@ Vue.prototype.selectDictLabel = selectDictLabel
 Vue.prototype.selectDictLabels = selectDictLabels
 Vue.prototype.download = download
 Vue.prototype.handleTree = handleTree
+
 
 Vue.prototype.msgSuccess = function (msg) {
   this.$message({ showClose: true, message: msg, type: "success" });
@@ -64,7 +70,6 @@ Vue.use(permission)
 Vue.use(Element, {
   size: Cookies.get('size') || 'medium' // set element-ui default size
 })
-
 Vue.config.productionTip = false
 
 new Vue({

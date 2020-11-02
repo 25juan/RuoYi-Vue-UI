@@ -21,8 +21,8 @@
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-button type="cyan" icon="el-icon-search" size="small" @click="handleQuery">搜索</el-button>
-        <el-button icon="el-icon-refresh" size="small" @click="resetQuery">重置</el-button>
+        <el-button type="cyan" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
 
@@ -187,6 +187,14 @@
               </el-radio-group>
             </el-form-item>
           </el-col>
+          <el-col :span="12">
+            <el-form-item v-if="form.menuType == 'C'" label="是否缓存">
+              <el-radio-group v-model="form.isCache">
+                <el-radio label="0">缓存</el-radio>
+                <el-radio label="1">不缓存</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
         </el-row>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -316,6 +324,7 @@ export default {
         menuType: "M",
         orderNum: undefined,
         isFrame: "1",
+        isCache: "0",
         visible: "0",
         status: "0"
       };

@@ -1,29 +1,39 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="商品名称" prop="name">
+
+      <el-form-item label="应用名称" prop="appName">
         <el-input
-          v-model="queryParams.name"
-          placeholder="请输入商品名称"
+          v-model="queryParams.appName"
+          placeholder="请输入应用名称"
           clearable
           size="small"
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="所属分类" prop="cateId">
-        <el-select v-model="queryParams.cateId" placeholder="请选择所属分类" clearable size="small">
-          <el-option v-for="dict in categories" :key="dict.id" :label="dict.name" :value="dict.id" />
-        </el-select>
-      </el-form-item>
       <el-form-item label="状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="用户状态" clearable size="small" style="width: 240px">
-          <el-option v-for="dict in statusOptions" :key="dict.dictValue" :label="dict.dictLabel" :value="dict.dictValue" />
+        <el-select v-model="queryParams.status" placeholder="请选择状态" clearable size="small">
+          <el-option
+            v-for="dict in statusOptions"
+            :key="dict.dictValue"
+            :label="dict.dictLabel"
+            :value="dict.dictValue"
+          />
         </el-select>
       </el-form-item>
-
+      <el-form-item label="平台" prop="platform">
+        <el-select v-model="queryParams.platform" placeholder="请选择平台" clearable size="small">
+          <el-option
+            v-for="dict in platformOptions"
+            :key="dict.dictValue"
+            :label="dict.dictLabel"
+            :value="dict.dictValue"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item>
-        <el-button type="cyan" icon="el-icon-search" size="small" @click="handleQuery">搜索</el-button>
-        <el-button icon="el-icon-refresh" size="small" @click="resetQuery">重置</el-button>
+        <el-button type="cyan" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
 
@@ -34,7 +44,7 @@
           icon="el-icon-plus"
           size="mini"
           @click="handleAdd"
-          v-hasPermi="['commodity:commodity:add']"
+          v-hasPermi="['update:application:add']"
         >新增</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -44,7 +54,7 @@
           size="mini"
           :disabled="single"
           @click="handleUpdate"
-          v-hasPermi="['commodity:commodity:edit']"
+          v-hasPermi="['update:application:edit']"
         >修改</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -54,7 +64,7 @@
           size="mini"
           :disabled="multiple"
           @click="handleDelete"
-          v-hasPermi="['commodity:commodity:remove']"
+          v-hasPermi="['update:application:remove']"
         >删除</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -63,29 +73,33 @@
           icon="el-icon-download"
           size="mini"
           @click="handleExport"
-          v-hasPermi="['commodity:commodity:export']"
+          v-hasPermi="['update:application:export']"
         >导出</el-button>
       </el-col>
 	  <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="commodityList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="applicationList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="商品id" align="center" prop="id" />
-      <el-table-column show-overflow-tooltip label="名称" align="center" prop="name" />
-      <el-table-column show-overflow-tooltip label="描述" align="center" prop="description" />
-      <el-table-column label="价格" align="center" prop="price" >
+      <el-table-column label="编号" type="index" align="center" />
+      <el-table-column label="AppKey" align="center" prop="appId" width="300" />
+      <el-table-column label="应用名称" align="center" prop="appName" >
         <template slot-scope="scope">
-          <span>¥{{ scope.row.price }}</span>
+          <el-link :href="`/app/apk?appId=${scope.row.id}&appKey=${scope.row.appId}`" type="primary">{{scope.row.appName}}</el-link>
         </template>
       </el-table-column>
-      <el-table-column label="剩余件数" align="center" prop="restCount" />
-      <el-table-column label="图片" align="center" prop="picture" >
+      <el-table-column label="创建者" align="center" prop="nickName" />
+      <el-table-column label="状态" align="center" prop="status" >
         <template slot-scope="scope">
-          <el-avatar size="large" :src="scope.row.picture"></el-avatar>
+          <el-switch :value="!!scope.row.status" @change="updateRowStatus(scope.row)"/>
         </template>
       </el-table-column>
-      <el-table-column label="分类" align="center" prop="cateId" />
+      <el-table-column label="平台" align="center" prop="platform">
+        <template slot-scope="scope">
+          <span>{{platformFormat(scope.row)}}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="创建时间" align="center" prop="platform" :formatter="dateFormat" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
@@ -93,14 +107,14 @@
             type="text"
             icon="el-icon-edit"
             @click="handleUpdate(scope.row)"
-            v-hasPermi="['commodity:commodity:edit']"
+            v-hasPermi="['update:application:edit']"
           >修改</el-button>
           <el-button
             size="mini"
             type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
-            v-hasPermi="['commodity:commodity:remove']"
+            v-hasPermi="['update:application:remove']"
           >删除</el-button>
         </template>
       </el-table-column>
@@ -114,29 +128,26 @@
       @pagination="getList"
     />
 
-    <!-- 添加或修改商品对话框 -->
+    <!-- 添加或修改应用信息对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="名称" prop="name">
-          <el-input v-model="form.name" placeholder="请输入商品名称" />
+        <el-form-item label="应用名称" prop="appName">
+          <el-input v-model="form.appName" placeholder="请输入应用名称" />
         </el-form-item>
-        <el-form-item label="描述">
-          <editor v-model="form.description" :min-height="192"/>
-        </el-form-item>
-        <el-form-item label="价格" prop="price">
-          <el-input v-model="form.price" placeholder="请输入商品价格" />
-        </el-form-item>
-        <el-form-item label="剩余件数" prop="restCount">
-          <el-input v-model="form.restCount" placeholder="请输入商品剩余件数" />
-        </el-form-item>
-        <el-form-item label="图片" prop="picture">
-          <el-input v-model="form.picture" placeholder="请输入商品图片" />
-        </el-form-item>
-        <el-form-item label="所属分类" prop="cateId">
-          <el-select v-model="form.cateId" placeholder="请选择所属分类">
-            <el-option label="请选择字典生成" value="" />
+        <el-form-item label="平台" prop="platform">
+          <el-select :disabled="!!form.id" v-model="form.platform" placeholder="请选择平台">
+            <el-option
+              v-for="dict in platformOptions"
+              :key="dict.dictValue"
+              :label="dict.dictLabel"
+              :value="parseInt(dict.dictValue)"
+            ></el-option>
           </el-select>
         </el-form-item>
+        <el-form-item v-if="form.platform == 2 " label="AppId" prop="appId">
+          <el-input :disabled="!!form.id" v-model="form.appId" placeholder="请填写应用Id" />
+        </el-form-item>
+
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -147,12 +158,13 @@
 </template>
 
 <script>
-import { listCommodity, getCommodity,getCategories, delCommodity, addCommodity, updateCommodity, exportCommodity } from "@/api/commodity/commodity";
-import Editor from '@/components/Editor';
+import { listApplication, getApplication, delApplication, addApplication, updateApplication, exportApplication } from "@/api/update/application";
+import {parseTime} from "@/utils/ruoyi";
+import Link from "@/layout/components/Sidebar/Link";
 
 export default {
-  name: "Commodity",
-  components: { Editor },
+  name: "Application",
+  components: {Link},
   data() {
     return {
       // 遮罩层
@@ -167,51 +179,82 @@ export default {
       showSearch: true,
       // 总条数
       total: 0,
-      // 商品表格数据
-      commodityList: [],
+      // 应用信息表格数据
+      applicationList: [],
       // 弹出层标题
       title: "",
-      // 状态查询
-      statusOptions:[],
-      categories:[],
-
       // 是否显示弹出层
       open: false,
+      // 状态字典
+      statusOptions: [],
+      // 平台字典
+      platformOptions: [],
       // 查询参数
       queryParams: {
         pageNum: 1,
         pageSize: 10,
-        name: null,
-        cateId: null,
-        status: null
+        appId: null,
+        appName: null,
+        userId: null,
+        status: null,
+        platform: null
       },
       // 表单参数
       form: {},
       // 表单校验
       rules: {
+        appName: [
+          { required: true, message: "应用名称不能为空", trigger: "blur" }
+        ]
       }
     };
   },
   created() {
     this.getList();
-    this.getDicts("commodity_status").then((response) => {
+    this.getDicts("sys_common_state").then(response => {
       this.statusOptions = response.data;
     });
-    getCategories().then(response => {
-      const rows = response.rows || [];
-      this.categories = rows ;
-    })
+    this.getDicts("sys_common_platform").then(response => {
+      this.platformOptions = response.data;
+    });
   },
   methods: {
-    /** 查询商品列表 */
+    /** 查询应用信息列表 */
     getList() {
       this.loading = true;
-      listCommodity(this.queryParams).then(response => {
-        this.commodityList = response.rows;
+      listApplication(this.queryParams).then(response => {
+        this.applicationList = response.rows;
         this.total = response.total;
         this.loading = false;
       });
     },
+    // 状态字典翻译
+    statusFormat(row, column) {
+      return this.selectDictLabel(this.statusOptions, row.status);
+    },
+    // 平台字典翻译
+    platformFormat(row, column) {
+      return this.selectDictLabel(this.platformOptions, row.platform);
+    },
+    // 时间格式化
+    dateFormat(params){
+      return this.parseTime(params.createTime,"{yyyy}-{mm}-{dd}");
+    },
+    // 更新数据装态
+    updateRowStatus(row){
+      if(row.status === 1){
+        row.status = 0
+      }else {
+        row.status = 1
+      }
+      updateApplication(row).then(response => {
+        if (response.code === 200) {
+          this.msgSuccess("状态更新成功");
+          this.getList();
+        }
+      });
+    },
+
     // 取消按钮
     cancel() {
       this.open = false;
@@ -221,13 +264,13 @@ export default {
     reset() {
       this.form = {
         id: null,
-        name: null,
-        description: null,
-        price: null,
-        restCount: null,
+        appId: null,
+        appName: null,
         createTime: null,
-        picture: null,
-        cateId: null
+        updateTime: null,
+        userId: null,
+        status: null,
+        platform: null
       };
       this.resetForm("form");
     },
@@ -251,16 +294,16 @@ export default {
     handleAdd() {
       this.reset();
       this.open = true;
-      this.title = "添加商品";
+      this.title = "添加应用信息";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
       const id = row.id || this.ids
-      getCommodity(id).then(response => {
+      getApplication(id).then(response => {
         this.form = response.data;
         this.open = true;
-        this.title = "修改商品";
+        this.title = "修改应用信息";
       });
     },
     /** 提交按钮 */
@@ -268,7 +311,7 @@ export default {
       this.$refs["form"].validate(valid => {
         if (valid) {
           if (this.form.id != null) {
-            updateCommodity(this.form).then(response => {
+            updateApplication(this.form).then(response => {
               if (response.code === 200) {
                 this.msgSuccess("修改成功");
                 this.open = false;
@@ -276,7 +319,7 @@ export default {
               }
             });
           } else {
-            addCommodity(this.form).then(response => {
+            addApplication(this.form).then(response => {
               if (response.code === 200) {
                 this.msgSuccess("新增成功");
                 this.open = false;
@@ -290,12 +333,12 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       const ids = row.id || this.ids;
-      this.$confirm('是否确认删除商品编号为"' + ids + '"的数据项?', "警告", {
+      this.$confirm('是否确认删除应用信息编号为"' + ids + '"的数据项?', "警告", {
           confirmButtonText: "确定",
           cancelButtonText: "取消",
           type: "warning"
         }).then(function() {
-          return delCommodity(ids);
+          return delApplication(ids);
         }).then(() => {
           this.getList();
           this.msgSuccess("删除成功");
@@ -304,12 +347,12 @@ export default {
     /** 导出按钮操作 */
     handleExport() {
       const queryParams = this.queryParams;
-      this.$confirm('是否确认导出所有商品数据项?', "警告", {
+      this.$confirm('是否确认导出所有应用信息数据项?', "警告", {
           confirmButtonText: "确定",
           cancelButtonText: "取消",
           type: "warning"
         }).then(function() {
-          return exportCommodity(queryParams);
+          return exportApplication(queryParams);
         }).then(response => {
           this.download(response.msg);
         }).catch(function() {});
